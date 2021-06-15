@@ -187,7 +187,7 @@ func Execute(cmd *cobra.Command, args []string) {
 	bot, err = tb.NewBot(tb.Settings{
 		Token:   TelegramToken,
 		Poller:  &tb.LongPoller{Timeout: 10 * time.Second},
-		Verbose: true,
+		Verbose: false,
 	})
 
 	if err != nil {

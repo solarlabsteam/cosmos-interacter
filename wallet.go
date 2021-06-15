@@ -17,7 +17,7 @@ func getWalletInfo(message *tb.Message) {
 	args := strings.Split(message.Text, " ")
 	if len(args) < 2 {
 		log.Info().Msg("getWalletInfo: args length < 2")
-		sendMessage(message, "Usage: wallet <address>")
+		sendMessage(message, "Usage: wallet &lt;wallet&gt;")
 		return
 	}
 
@@ -109,6 +109,9 @@ func getWalletInfo(message *tb.Message) {
 	))
 
 	sendMessage(message, sb.String())
+	log.Info().
+		Str("query", address).
+		Msg("Successfully returned wallet info")
 }
 
 func getTotalDelegations(address string) (float64, error) {

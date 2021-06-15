@@ -16,6 +16,7 @@ func getValidatorInfo(message *tb.Message) {
 	args := strings.Split(message.Text, " ")
 	if len(args) < 2 {
 		log.Info().Msg("getWalletInfo: args length < 2")
+		sendMessage(message, "Usage: validator &lt;validator operator address or name&gt;")
 		return
 	}
 
@@ -26,12 +27,14 @@ func getValidatorInfo(message *tb.Message) {
 	validator, err := getValidator(address)
 	if err != nil {
 		log.Error().Err(err).Msg("Could not get validator")
+		sendMessage(message, "Could not find validator")
 		return
 	}
 
 	rank, err := getValidatorRank(validator)
 	if err != nil {
 		log.Error().Err(err).Msg("Could not get validator rank")
+		sendMessage(message, "Could not find validator rank")
 		return
 	}
 
@@ -53,6 +56,7 @@ func getValidatorInfo(message *tb.Message) {
 			Str("address", address).
 			Err(err).
 			Msg("Could not parse balance")
+		sendMessage(message, "Could not parse balance")
 		return
 	} else {
 		sb.WriteString(fmt.Sprintf("<strong>Commission rate: </strong><code>%.1f%%</code>\n", value*100))
@@ -62,7 +66,8 @@ func getValidatorInfo(message *tb.Message) {
 		log.Error().
 			Str("address", address).
 			Err(err).
-			Msg("Could not parse balance")
+			Msg("Could not parse delegator shares")
+		sendMessage(message, "Could not parse delegator shares")
 		return
 	} else {
 		sb.WriteString(fmt.Sprintf(
@@ -78,13 +83,11 @@ func getValidatorInfo(message *tb.Message) {
 		sb.WriteString(fmt.Sprintf("<strong>Rank: </strong>%d\n", rank))
 	}
 
-	bot.Send(
-		message.Chat,
-		sb.String(),
-		&tb.SendOptions{
-			ParseMode: tb.ModeHTML,
-		},
-	)
+	sendMessage(message, sb.String())
+	log.Info().
+		Str("query", address).
+		Str("validator", validator.OperatorAddress).
+		Msg("Successfully returned validator info")
 }
 
 func getValidator(address string) (stakingtypes.Validator, error) {
