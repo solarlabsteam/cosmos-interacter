@@ -46,8 +46,7 @@ func getWalletInfo(message *tb.Message) {
 			Str("address", address).
 			Err(err).
 			Msg("Could not get delegations")
-		sendMessage(message, "Could not get wallet delegations")
-		return
+		delegationsTotal = 0
 	}
 
 	unbondingsTotal, err := getTotalUnbondings(address)
@@ -56,8 +55,7 @@ func getWalletInfo(message *tb.Message) {
 			Str("address", address).
 			Err(err).
 			Msg("Could not get unbondings")
-		sendMessage(message, "Could not get wallet unbondings")
-		return
+		unbondingsTotal = 0
 	}
 
 	rewardsTotal, err := getTotalRewards(address)
@@ -66,8 +64,7 @@ func getWalletInfo(message *tb.Message) {
 			Str("address", address).
 			Err(err).
 			Msg("Could not get rewards")
-		sendMessage(message, "Could not get wallet rewards")
-		return
+		rewardsTotal = 0
 	}
 
 	// --------------------------------
