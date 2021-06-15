@@ -201,6 +201,8 @@ func Execute(cmd *cobra.Command, args []string) {
 	bot.Handle("/validator", getValidatorInfo)
 	bot.Handle("/rate", getRate)
 	bot.Handle("/help", getHelp)
+	bot.Handle("/start", getHelp)
+	bot.Handle("/about", getAbout)
 	bot.Start()
 }
 
