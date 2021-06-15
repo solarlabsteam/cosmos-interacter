@@ -24,5 +24,7 @@ func getHelp(message *tb.Message) {
 	sb.WriteString("<a href=\"https://apps.apple.com/us/app/cosmostation/id1459830339\">Cosmostation Wallet for iOS</a>\n")
 
 	sendMessage(message, sb.String())
-	log.Info().Msg("Successfully returned help info")
+	log.Info().
+		Str("user", message.Sender.Username).
+		Msg("Successfully returned help info")
 }

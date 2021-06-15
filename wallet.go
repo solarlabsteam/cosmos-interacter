@@ -16,13 +16,15 @@ import (
 func getWalletInfo(message *tb.Message) {
 	args := strings.Split(message.Text, " ")
 	if len(args) < 2 {
-		log.Info().Msg("getWalletInfo: args length < 2")
+		log.Info().
+			Str("user", message.Sender.Username).
+			Msg("getWalletInfo: args length < 2")
 		sendMessage(message, "Usage: wallet &lt;wallet&gt;")
 		return
 	}
 
 	address := args[1]
-	log.Info().Str("address", address).Msg("getWalletInfo: address")
+	log.Debug().Str("address", address).Msg("getWalletInfo: address")
 
 	// --------------------------------
 	bankClient := banktypes.NewQueryClient(grpcConn)
@@ -108,6 +110,7 @@ func getWalletInfo(message *tb.Message) {
 	sendMessage(message, sb.String())
 	log.Info().
 		Str("query", address).
+		Str("user", message.Sender.Username).
 		Msg("Successfully returned wallet info")
 }
 

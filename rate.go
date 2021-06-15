@@ -24,5 +24,6 @@ func getRate(message *tb.Message) {
 	sendMessage(message, sb.String())
 	log.Info().
 		Str("currency", CoingeckoCurrency).
+		Str("user", message.Sender.Username).
 		Msg("Successfully returned currency info")
 }

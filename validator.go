@@ -21,7 +21,7 @@ func getValidatorInfo(message *tb.Message) {
 	}
 
 	address := args[1]
-	log.Info().Str("address", address).Msg("getValidatorInfo: address")
+	log.Debug().Str("address", address).Msg("getValidatorInfo: address")
 
 	// --------------------------------
 	validator, err := getValidator(address)
@@ -87,6 +87,7 @@ func getValidatorInfo(message *tb.Message) {
 	log.Info().
 		Str("query", address).
 		Str("validator", validator.OperatorAddress).
+		Str("user", message.Sender.Username).
 		Msg("Successfully returned validator info")
 }
 
@@ -132,7 +133,7 @@ func getValidator(address string) (stakingtypes.Validator, error) {
 			strings.ToLower(validator.Description.Moniker),
 			strings.ToLower(address),
 		) {
-			log.Info().Str("address", address).Str("moniker", validator.Description.Moniker).Msg("Found validator")
+			log.Debug().Str("address", address).Str("moniker", validator.Description.Moniker).Msg("Found validator")
 			return validator, nil
 		}
 	}
