@@ -205,7 +205,7 @@ func Execute(cmd *cobra.Command, args []string) {
 }
 
 func sendMessage(message *tb.Message, text string) {
-	bot.Send(
+	_, err := bot.Send(
 		message.Chat,
 		text,
 		&tb.SendOptions{
@@ -213,6 +213,10 @@ func sendMessage(message *tb.Message, text string) {
 			ReplyTo:   message,
 		},
 	)
+
+	if err != nil {
+		log.Error().Err(err).Msg("Could not send Telegram message")
+	}
 }
 
 func main() {
