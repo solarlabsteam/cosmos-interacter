@@ -195,6 +195,7 @@ func Execute(cmd *cobra.Command, args []string) {
 	}
 
 	bot.Handle("/wallet", getWalletInfo)
+	bot.Handle("/validator", getValidatorInfo)
 	bot.Start()
 }
 

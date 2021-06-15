@@ -23,9 +23,8 @@ func getWalletInfo(message *tb.Message) {
 	address := args[1]
 	log.Info().Str("address", address).Msg("getWalletInfo: address")
 
-	bankClient := banktypes.NewQueryClient(grpcConn)
-
 	// --------------------------------
+	bankClient := banktypes.NewQueryClient(grpcConn)
 	balancesResponse, err := bankClient.AllBalances(
 		context.Background(),
 		&banktypes.QueryAllBalancesRequest{Address: address},
