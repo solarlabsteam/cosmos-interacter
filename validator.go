@@ -13,7 +13,7 @@ import (
 )
 
 func getValidatorInfo(message *tb.Message) {
-	args := strings.Split(message.Text, " ")
+	args := strings.SplitAfterN(message.Text, " ", 2)
 	if len(args) < 2 {
 		log.Info().Msg("getWalletInfo: args length < 2")
 		sendMessage(message, "Usage: validator &lt;validator operator address or name&gt;")
