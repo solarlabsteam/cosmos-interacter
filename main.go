@@ -1,19 +1,28 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"math"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"google.golang.org/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 var (
@@ -33,11 +42,16 @@ var (
 	ConsensusNodePrefix       string
 	ConsensusNodePubkeyPrefix string
 
+	Denom            string
+	DenomCoefficient float64
+
 	grpcConn *grpc.ClientConn
 
 	log = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
 
-	bot tgbotapi.BotAPI
+	bot *tb.Bot
+
+	Printer = message.NewPrinter(language.English)
 )
 
 var rootCmd = &cobra.Command{
@@ -115,6 +129,40 @@ func setBechPrefixes(cmd *cobra.Command) {
 	}
 }
 
+func setDenom() {
+	bankClient := banktypes.NewQueryClient(grpcConn)
+	denoms, err := bankClient.DenomsMetadata(
+		context.Background(),
+		&banktypes.QueryDenomsMetadataRequest{},
+	)
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error querying denom")
+	}
+
+	metadata := denoms.Metadatas[0] // always using the first one
+	if Denom == "" {                // using display currency
+		Denom = metadata.Display
+	}
+
+	for _, unit := range metadata.DenomUnits {
+		log.Debug().
+			Str("denom", unit.Denom).
+			Uint32("exponent", unit.Exponent).
+			Msg("Denom info")
+		if unit.Denom == Denom {
+			DenomCoefficient = math.Pow10(int(unit.Exponent))
+			log.Info().
+				Str("denom", Denom).
+				Float64("coefficient", DenomCoefficient).
+				Msg("Got denom info")
+			return
+		}
+	}
+
+	log.Fatal().Msg("Could not find the denom info")
+}
+
 func Execute(cmd *cobra.Command, args []string) {
 	logLevel, err := zerolog.ParseLevel(LogLevel)
 	if err != nil {
@@ -128,7 +176,7 @@ func Execute(cmd *cobra.Command, args []string) {
 	config.SetBech32PrefixForConsensusNode(ConsensusNodePrefix, ConsensusNodePubkeyPrefix)
 	config.Seal()
 
-	grpcConn, err := grpc.Dial(
+	grpcConn, err = grpc.Dial(
 		NodeAddress,
 		grpc.WithInsecure(),
 	)
@@ -138,48 +186,24 @@ func Execute(cmd *cobra.Command, args []string) {
 
 	defer grpcConn.Close()
 
-	bot, err := tgbotapi.NewBotAPI(TelegramToken)
+	setDenom()
+
+	bot, err = tb.NewBot(tb.Settings{
+		Token:   TelegramToken,
+		Poller:  &tb.LongPoller{Timeout: 10 * time.Second},
+		Verbose: true,
+	})
+
 	if err != nil {
-		log.Fatal().Err(err).Msg("Could not connect to Telegram")
+		log.Fatal().Err(err).Msg("Could not create bot")
 	}
 
-	bot.Debug = true
-
-	log.Info().Str("username", bot.Self.UserName).Msg("Authorized on account")
-
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates, err := bot.GetUpdatesChan(u)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Could not get updates")
-	}
-
-	for update := range updates {
-		if update.Message == nil { // ignore any non-Message Updates
-			continue
-		}
-
-		log.Info().
-			Str("from", update.Message.From.UserName).
-			Str("text", update.Message.Text).
-			Msg("Got message")
-
-		switch {
-		case strings.HasPrefix(update.Message.Text, "/wallet"):
-			getWalletInfo(update.Message.Text)
-			return
-		}
-
-		// msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-		// msg.ReplyToMessageID = update.Message.MessageID
-
-		// bot.Send(msg)
-	}
+	bot.Handle("/wallet", getWalletInfo)
+	bot.Start()
 }
 
-func getWalletInfo(text string) {
-	args := strings.Split(text, " ")
+func getWalletInfo(message *tb.Message) {
+	args := strings.Split(message.Text, " ")
 	if len(args) < 2 {
 		log.Info().Msg("getWalletInfo: args length < 2")
 		return
@@ -187,6 +211,182 @@ func getWalletInfo(text string) {
 
 	address := args[1]
 	log.Info().Str("address", address).Msg("getWalletInfo: address")
+
+	bankClient := banktypes.NewQueryClient(grpcConn)
+
+	// --------------------------------
+	balancesResponse, err := bankClient.AllBalances(
+		context.Background(),
+		&banktypes.QueryAllBalancesRequest{Address: address},
+	)
+
+	if err != nil {
+		log.Error().
+			Str("address", address).
+			Err(err).
+			Msg("Could not get balance")
+		return
+	}
+
+	delegationsTotal, err := getTotalDelegations(address)
+	if err != nil {
+		log.Error().
+			Str("address", address).
+			Err(err).
+			Msg("Could not get delegations")
+		return
+	}
+
+	unbondingsTotal, err := getTotalUnbondings(address)
+	if err != nil {
+		log.Error().
+			Str("address", address).
+			Err(err).
+			Msg("Could not get unbondings")
+		return
+	}
+
+	rewardsTotal, err := getTotalRewards(address)
+	if err != nil {
+		log.Error().
+			Str("address", address).
+			Err(err).
+			Msg("Could not get rewards")
+		return
+	}
+
+	// --------------------------------
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("<code>%s</code>\n", address))
+	sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/account/%s\">Mintscan</a>\n\n", MintscanPrefix, address))
+
+	sb.WriteString(fmt.Sprintf("<strong>Balance:        </strong>"))
+
+	for _, balance := range balancesResponse.Balances {
+		// because cosmos's dec doesn't have .toFloat64() method or whatever and returns everything as int
+		if value, err := strconv.ParseFloat(balance.Amount.String(), 64); err != nil {
+			log.Error().
+				Str("address", address).
+				Err(err).
+				Msg("Could not parse balance")
+		} else {
+			sb.WriteString(Printer.Sprintf("<code>%.2f %s</code> ", value/DenomCoefficient, Denom))
+		}
+	}
+
+	sb.WriteString(Printer.Sprintf(
+		"\n<strong>Total delegated: </strong><code>%.2f %s</code>",
+		delegationsTotal/DenomCoefficient,
+		Denom,
+	))
+
+	sb.WriteString(Printer.Sprintf(
+		"\n<strong>Total unbonded: </strong><code>%.2f %s</code>",
+		unbondingsTotal/DenomCoefficient,
+		Denom,
+	))
+
+	sb.WriteString(Printer.Sprintf(
+		"\n<strong>Total rewards:  </strong><code>%.2f %s</code>",
+		rewardsTotal/DenomCoefficient,
+		Denom,
+	))
+
+	bot.Send(
+		message.Chat,
+		sb.String(),
+		&tb.SendOptions{
+			ParseMode: tb.ModeHTML,
+		},
+	)
+}
+
+func getTotalDelegations(address string) (float64, error) {
+	stakingClient := stakingtypes.NewQueryClient(grpcConn)
+	delegationsResponse, err := stakingClient.DelegatorDelegations(
+		context.Background(),
+		&stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: address},
+	)
+
+	if err != nil {
+		log.Error().
+			Str("address", address).
+			Err(err).
+			Msg("Could not get balance")
+		return 0, err
+	}
+
+	delegationsTotal := float64(0)
+	for _, delegation := range delegationsResponse.DelegationResponses {
+		if value, err := strconv.ParseFloat(delegation.Balance.Amount.String(), 64); err != nil {
+			log.Error().
+				Str("address", address).
+				Err(err).
+				Msg("Could not parse balance")
+			return 0, err
+		} else {
+			delegationsTotal += value
+		}
+	}
+
+	return delegationsTotal, nil
+}
+
+func getTotalUnbondings(address string) (float64, error) {
+	stakingClient := stakingtypes.NewQueryClient(grpcConn)
+	unbondingsResponse, err := stakingClient.DelegatorUnbondingDelegations(
+		context.Background(),
+		&stakingtypes.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: address},
+	)
+
+	if err != nil {
+		log.Error().
+			Str("address", address).
+			Err(err).
+			Msg("Could not get balance")
+		return 0, err
+	}
+
+	unbondingsTotal := float64(0)
+	for _, unbonding := range unbondingsResponse.UnbondingResponses {
+		for _, entry := range unbonding.Entries {
+			unbondingsTotal += float64(entry.Balance.Int64())
+		}
+	}
+
+	return unbondingsTotal, nil
+}
+
+func getTotalRewards(address string) (float64, error) {
+	distributionClient := distributiontypes.NewQueryClient(grpcConn)
+	rewardsResponse, err := distributionClient.DelegationTotalRewards(
+		context.Background(),
+		&distributiontypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: address},
+	)
+
+	if err != nil {
+		log.Error().
+			Str("address", address).
+			Err(err).
+			Msg("Could not get rewards")
+		return 0, err
+	}
+
+	rewardsTotal := float64(0)
+	for _, reward := range rewardsResponse.Total {
+		if value, err := strconv.ParseFloat(reward.Amount.String(), 64); err != nil {
+			log.Error().
+				Str("address", address).
+				Err(err).
+				Msg("Could not parse reward")
+			return 0, err
+		} else {
+			rewardsTotal += value
+		}
+	}
+
+	return rewardsTotal, nil
 }
 
 func main() {
