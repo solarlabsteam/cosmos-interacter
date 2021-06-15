@@ -199,6 +199,17 @@ func Execute(cmd *cobra.Command, args []string) {
 	bot.Start()
 }
 
+func sendMessage(message *tb.Message, text string) {
+	bot.Send(
+		message.Chat,
+		text,
+		&tb.SendOptions{
+			ParseMode: tb.ModeHTML,
+			ReplyTo:   message,
+		},
+	)
+}
+
 func main() {
 	rootCmd.PersistentFlags().StringVar(&ConfigPath, "config", "", "Config file path")
 	rootCmd.PersistentFlags().StringVar(&LogLevel, "log-level", "info", "Logging level")

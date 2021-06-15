@@ -17,6 +17,7 @@ func getWalletInfo(message *tb.Message) {
 	args := strings.Split(message.Text, " ")
 	if len(args) < 2 {
 		log.Info().Msg("getWalletInfo: args length < 2")
+		sendMessage(message, "Usage: wallet <address>")
 		return
 	}
 
@@ -35,6 +36,7 @@ func getWalletInfo(message *tb.Message) {
 			Str("address", address).
 			Err(err).
 			Msg("Could not get balance")
+		sendMessage(message, "Could not get wallet balance")
 		return
 	}
 
@@ -44,6 +46,7 @@ func getWalletInfo(message *tb.Message) {
 			Str("address", address).
 			Err(err).
 			Msg("Could not get delegations")
+		sendMessage(message, "Could not get wallet delegations")
 		return
 	}
 
@@ -53,6 +56,7 @@ func getWalletInfo(message *tb.Message) {
 			Str("address", address).
 			Err(err).
 			Msg("Could not get unbondings")
+		sendMessage(message, "Could not get wallet unbondings")
 		return
 	}
 
@@ -62,6 +66,7 @@ func getWalletInfo(message *tb.Message) {
 			Str("address", address).
 			Err(err).
 			Msg("Could not get rewards")
+		sendMessage(message, "Could not get wallet rewards")
 		return
 	}
 
@@ -71,7 +76,7 @@ func getWalletInfo(message *tb.Message) {
 	sb.WriteString(fmt.Sprintf("<code>%s</code>\n", address))
 	sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/account/%s\">Mintscan</a>\n\n", MintscanPrefix, address))
 
-	sb.WriteString(fmt.Sprintf("<strong>Balance:        </strong>"))
+	sb.WriteString("<strong>Balance:        </strong>")
 
 	for _, balance := range balancesResponse.Balances {
 		// because cosmos's dec doesn't have .toFloat64() method or whatever and returns everything as int
@@ -103,13 +108,7 @@ func getWalletInfo(message *tb.Message) {
 		Denom,
 	))
 
-	bot.Send(
-		message.Chat,
-		sb.String(),
-		&tb.SendOptions{
-			ParseMode: tb.ModeHTML,
-		},
-	)
+	sendMessage(message, sb.String())
 }
 
 func getTotalDelegations(address string) (float64, error) {
