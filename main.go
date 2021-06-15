@@ -41,6 +41,8 @@ var (
 	Denom            string
 	DenomCoefficient float64
 
+	CoingeckoCurrency string
+
 	grpcConn *grpc.ClientConn
 
 	log = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
@@ -196,6 +198,7 @@ func Execute(cmd *cobra.Command, args []string) {
 
 	bot.Handle("/wallet", getWalletInfo)
 	bot.Handle("/validator", getValidatorInfo)
+	bot.Handle("/rate", getRate)
 	bot.Start()
 }
 
@@ -215,6 +218,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&LogLevel, "log-level", "info", "Logging level")
 	rootCmd.PersistentFlags().StringVar(&NodeAddress, "node", "localhost:9090", "RPC node address")
 	rootCmd.PersistentFlags().StringVar(&MintscanPrefix, "mintscan-prefix", "persistence", "Prefix for mintscan links like https://mintscan.io/{prefix}")
+	rootCmd.PersistentFlags().StringVar(&CoingeckoCurrency, "coingecko-currency", "persistence", "Coingecko currency")
 
 	rootCmd.PersistentFlags().StringVar(&TelegramToken, "telegram-token", "", "Telegram bot token")
 	rootCmd.PersistentFlags().IntVar(&TelegramChat, "telegram-chat", 0, "Telegram chat or user ID")
