@@ -83,7 +83,7 @@ func serializeProposal(proposal govtypes.Proposal) string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("<strong>Proposal #%d<strong>\n", proposal.ProposalId))
+	sb.WriteString(fmt.Sprintf("<strong>Proposal #%d</strong>\n", proposal.ProposalId))
 	sb.WriteString(fmt.Sprintf("<code>%s</code>\n", title))
 	sb.WriteString(fmt.Sprintf("Submit time: <code>%s</code>\n", proposal.SubmitTime))
 	sb.WriteString(fmt.Sprintf("Deposit time: <code>%s</code>\n", proposal.DepositEndTime))
