@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -15,7 +14,7 @@ import (
 )
 
 func getProposalsInfo(message *tb.Message) {
-	log.Debug().Msg("getProposalsInfo: id")
+	log.Debug().Msg("getProposalsInfo")
 
 	// --------------------------------
 	proposals, err := getProposals()
@@ -71,10 +70,6 @@ func serializeProposalShort(proposal govtypes.Proposal) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("<strong>Proposal #%d</strong>\n", proposal.ProposalId))
 	sb.WriteString(fmt.Sprintf("<code>%s</code>\n", title))
-	sb.WriteString(fmt.Sprintf("Submit time: <code>%s</code>\n", proposal.SubmitTime.Format(time.RFC822)))
-	sb.WriteString(fmt.Sprintf("Deposit time: <code>%s</code>\n", proposal.DepositEndTime.Format(time.RFC822)))
-	sb.WriteString(fmt.Sprintf("Voting starts: <code>%s</code>\n", proposal.VotingStartTime.Format(time.RFC822)))
-	sb.WriteString(fmt.Sprintf("Voting ends: <code>%s</code>\n", proposal.VotingEndTime.Format(time.RFC822)))
 	sb.WriteString(fmt.Sprintf("Status: <code>%s</code>\n", proposal.Status))
 	sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/proposals/%d\">Mintscan</a>\n\n", MintscanPrefix, proposal.ProposalId))
 	sb.WriteString(fmt.Sprintf("More info: <code>/proposal %d</code>", proposal.ProposalId))

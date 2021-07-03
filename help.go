@@ -15,6 +15,8 @@ func getHelp(message *tb.Message) {
 	sb.WriteString("- /wallet &lt;wallet address&gt; - get the wallet info (balance, delegated amount, rewards etc.)\n")
 	sb.WriteString("- /validator &lt;validator address or name&gt; - get validator info\n")
 	sb.WriteString("- /rate - get the Coingecko exchange rate to USD\n")
+	sb.WriteString("- /proposal &lt;proposal ID&gt; - get the proposal info\n")
+	sb.WriteString("- /proposals - proposals list\n")
 	sb.WriteString("- /help - display this message\n")
 	sb.WriteString("- /about - get info about this bot and its creators\n\n")
 	sb.WriteString("<strong>Useful links:</strong>\n")
