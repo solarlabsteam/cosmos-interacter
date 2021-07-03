@@ -11,8 +11,6 @@ import (
 )
 
 func getProposalsInfo(message *tb.Message) {
-	log.Debug().Msg("getProposalsInfo")
-
 	// --------------------------------
 	proposals, err := getProposals()
 	if err != nil {
