@@ -6,9 +6,6 @@ import (
 	"strings"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/gogo/protobuf/proto"
 
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -38,41 +35,16 @@ func getProposalsInfo(message *tb.Message) {
 }
 
 func serializeProposalShort(proposal govtypes.Proposal) string {
-	title := ""
-
-	switch proposal.Content.TypeUrl {
-	case "/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":
-		var parsedMessage upgradetypes.SoftwareUpgradeProposal
-		if err := proto.Unmarshal(proposal.Content.Value, &parsedMessage); err != nil {
-			log.Error().Err(err).Msg("Could not parse SoftwareUpgradeProposal")
-			return "Could not parse proposal"
-		} else {
-			title = parsedMessage.Title
-		}
-	case "/cosmos.gov.v1beta1.TextProposal":
-		var parsedMessage govtypes.TextProposal
-		if err := proto.Unmarshal(proposal.Content.Value, &parsedMessage); err != nil {
-			log.Error().Err(err).Msg("Could not parse TextProposal")
-			return "Could not parse proposal"
-		} else {
-			title = parsedMessage.Title
-		}
-	case "/cosmos.params.v1beta1.ParameterChangeProposal":
-		var parsedMessage paramstypes.ParameterChangeProposal
-		if err := proto.Unmarshal(proposal.Content.Value, &parsedMessage); err != nil {
-			log.Error().Err(err).Msg("Could not parse ParameterChangeProposal")
-			return "Could not parse proposal"
-		} else {
-			title = parsedMessage.Title
-		}
-	default:
-		log.Error().Str("type", proposal.Content.TypeUrl).Msg("Unknown proposal type!")
+	proposalInfo, err := getProposalInfoAsStruct(proposal)
+	if err != nil {
+		log.Error().Err(err).Msg("Could not parse proposal")
+		return ""
 	}
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("<strong>Proposal #%d</strong>\n", proposal.ProposalId))
-	if title != "" {
-		sb.WriteString(fmt.Sprintf("<code>%s</code>\n", title))
+	if proposalInfo.Title != "" {
+		sb.WriteString(fmt.Sprintf("<code>%s</code>\n", proposalInfo.Title))
 	}
 	sb.WriteString(fmt.Sprintf("Status: <code>%s</code>\n", proposal.Status))
 	sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/proposals/%d\">Mintscan</a>\n", MintscanPrefix, proposal.ProposalId))

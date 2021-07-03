@@ -8,9 +8,6 @@ import (
 	"time"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/gogo/protobuf/proto"
 
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -42,50 +39,28 @@ func getProposalInfo(message *tb.Message) {
 
 	// --------------------------------
 
-	sendMessage(message, serializeProposal(proposal))
-	log.Info().
-		Uint64("id", proposal.ProposalId).
-		Str("user", message.Sender.Username).
-		Msg("Successfully returned proposal info")
+	serializedProposal, err := serializeProposal(proposal)
+	if err != nil {
+		sendMessage(message, "Error getting proposal")
+		log.Info().
+			Uint64("id", proposal.ProposalId).
+			Str("user", message.Sender.Username).
+			Msg("Successfully returned proposal info")
+	} else {
+		sendMessage(message, serializedProposal)
+
+	}
 }
 
-func serializeProposal(proposal govtypes.Proposal) string {
-	title := ""
-	description := ""
-
-	switch proposal.Content.TypeUrl {
-	case "/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":
-		var parsedMessage upgradetypes.SoftwareUpgradeProposal
-		if err := proto.Unmarshal(proposal.Content.Value, &parsedMessage); err != nil {
-			log.Error().Err(err).Msg("Could not parse SoftwareUpgradeProposal")
-			return "Could not parse proposal"
-		} else {
-			title = parsedMessage.Title
-			description = parsedMessage.Description
-		}
-	case "/cosmos.gov.v1beta1.TextProposal":
-		var parsedMessage govtypes.TextProposal
-		if err := proto.Unmarshal(proposal.Content.Value, &parsedMessage); err != nil {
-			log.Error().Err(err).Msg("Could not parse TextProposal")
-			return "Could not parse proposal"
-		} else {
-			title = parsedMessage.Title
-			description = parsedMessage.Description
-		}
-	case "/cosmos.params.v1beta1.ParameterChangeProposal":
-		var parsedMessage paramstypes.ParameterChangeProposal
-		if err := proto.Unmarshal(proposal.Content.Value, &parsedMessage); err != nil {
-			log.Error().Err(err).Msg("Could not parse ParameterChangeProposal")
-			return "Could not parse proposal"
-		} else {
-			title = parsedMessage.Title
-			description = parsedMessage.Description
-		}
+func serializeProposal(proposal govtypes.Proposal) (string, error) {
+	proposalInfo, err := getProposalInfoAsStruct(proposal)
+	if err != nil {
+		return "", err
 	}
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("<strong>Proposal #%d</strong>\n", proposal.ProposalId))
-	sb.WriteString(fmt.Sprintf("<code>%s</code>\n", title))
+	sb.WriteString(fmt.Sprintf("<code>%s</code>\n", proposalInfo.Title))
 	sb.WriteString(fmt.Sprintf("Submit time: <code>%s</code>\n", proposal.SubmitTime.Format(time.RFC822)))
 	sb.WriteString(fmt.Sprintf("Deposit time: <code>%s</code>\n", proposal.DepositEndTime.Format(time.RFC822)))
 	sb.WriteString(fmt.Sprintf("Voting starts: <code>%s</code>\n", proposal.VotingStartTime.Format(time.RFC822)))
@@ -93,9 +68,9 @@ func serializeProposal(proposal govtypes.Proposal) string {
 	sb.WriteString(fmt.Sprintf("Status: <code>%s</code>\n", proposal.Status))
 	sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/proposals/%d\">Mintscan</a>\n\n", MintscanPrefix, proposal.ProposalId))
 
-	sb.WriteString(fmt.Sprintf("<pre>%s</pre>", description))
+	sb.WriteString(fmt.Sprintf("<pre>%s</pre>", proposalInfo.Description))
 
-	return sb.String()
+	return sb.String(), nil
 }
 
 func getProposal(id uint64) (govtypes.Proposal, error) {
