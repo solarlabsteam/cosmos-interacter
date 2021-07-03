@@ -129,6 +129,16 @@ func setBechPrefixes(cmd *cobra.Command) {
 }
 
 func setDenom() {
+	// if --denom and --denom-coefficient are both provided, use them
+	// instead of fetching them via gRPC. Can be useful for networks like osmosis.
+	if Denom != "" && DenomCoefficient != 0 {
+		log.Info().
+			Str("denom", Denom).
+			Float64("coefficient", DenomCoefficient).
+			Msg("Using provided denom and coefficient.")
+		return
+	}
+
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	denoms, err := bankClient.DenomsMetadata(
 		context.Background(),
@@ -225,6 +235,8 @@ func sendMessage(message *tb.Message, text string) {
 
 func main() {
 	rootCmd.PersistentFlags().StringVar(&ConfigPath, "config", "", "Config file path")
+	rootCmd.PersistentFlags().StringVar(&Denom, "denom", "", "Cosmos coin denom")
+	rootCmd.PersistentFlags().Float64Var(&DenomCoefficient, "denom-coefficient", 0, "Denom coefficient")
 	rootCmd.PersistentFlags().StringVar(&LogLevel, "log-level", "info", "Logging level")
 	rootCmd.PersistentFlags().StringVar(&NodeAddress, "node", "localhost:9090", "RPC node address")
 	rootCmd.PersistentFlags().StringVar(&MintscanPrefix, "mintscan-prefix", "persistence", "Prefix for mintscan links like https://mintscan.io/{prefix}")
