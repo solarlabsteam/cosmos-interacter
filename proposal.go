@@ -61,10 +61,10 @@ func serializeProposal(proposal govtypes.Proposal) (string, error) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("<strong>Proposal #%d</strong>\n", proposal.ProposalId))
 	sb.WriteString(fmt.Sprintf("<code>%s</code>\n", proposalInfo.Title))
-	sb.WriteString(fmt.Sprintf("Submit time: <code>%s</code>\n", proposal.SubmitTime.Format(time.RFC822)))
-	sb.WriteString(fmt.Sprintf("Deposit time: <code>%s</code>\n", proposal.DepositEndTime.Format(time.RFC822)))
+	sb.WriteString(fmt.Sprintf("Submit time:   <code>%s</code>\n", proposal.SubmitTime.Format(time.RFC822)))
+	sb.WriteString(fmt.Sprintf("Deposit time:  <code>%s</code>\n", proposal.DepositEndTime.Format(time.RFC822)))
 	sb.WriteString(fmt.Sprintf("Voting starts: <code>%s</code>\n", proposal.VotingStartTime.Format(time.RFC822)))
-	sb.WriteString(fmt.Sprintf("Voting ends: <code>%s</code>\n", proposal.VotingEndTime.Format(time.RFC822)))
+	sb.WriteString(fmt.Sprintf("Voting ends:   <code>%s</code>\n", proposal.VotingEndTime.Format(time.RFC822)))
 	sb.WriteString(fmt.Sprintf("Status: <code>%s</code>\n", proposal.Status))
 	sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/proposals/%d\">Mintscan</a>\n\n", MintscanPrefix, proposal.ProposalId))
 
