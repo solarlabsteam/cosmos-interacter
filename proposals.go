@@ -65,13 +65,17 @@ func serializeProposalShort(proposal govtypes.Proposal) string {
 		} else {
 			title = parsedMessage.Title
 		}
+	default:
+		log.Error().Str("type", proposal.Content.TypeUrl).Msg("Unknown proposal type!")
 	}
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("<strong>Proposal #%d</strong>\n", proposal.ProposalId))
-	sb.WriteString(fmt.Sprintf("<code>%s</code>\n", title))
+	if title != "" {
+		sb.WriteString(fmt.Sprintf("<code>%s</code>\n", title))
+	}
 	sb.WriteString(fmt.Sprintf("Status: <code>%s</code>\n", proposal.Status))
-	sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/proposals/%d\">Mintscan</a>\n\n", MintscanPrefix, proposal.ProposalId))
+	sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/proposals/%d\">Mintscan</a>\n", MintscanPrefix, proposal.ProposalId))
 	sb.WriteString(fmt.Sprintf("More info: <code>/proposal %d</code>", proposal.ProposalId))
 
 	return sb.String()
