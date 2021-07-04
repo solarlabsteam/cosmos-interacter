@@ -23,7 +23,7 @@ func getBlockApproximateDate(message *tb.Message) {
 		return
 	}
 
-	blockHeightProvided, err := strconv.ParseInt(args[0], 10, 64)
+	blockHeightProvided, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {
 		log.Error().Err(err).Msg("getBlockApproximateDate: Could not parse block")
 		sendMessage(message, "Block should be a number!")
