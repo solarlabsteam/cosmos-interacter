@@ -17,6 +17,7 @@ func getHelp(message *tb.Message) {
 	sb.WriteString("- /rate - get the Coingecko exchange rate to USD\n")
 	sb.WriteString("- /proposal &lt;proposal ID&gt; - get the proposal info\n")
 	sb.WriteString("- /proposals - proposals list\n")
+	sb.WriteString("- /wenblock &lt;block ID&gt; - gets the approximate block generation time (or the actual one, if the block was generated already)\n")
 	sb.WriteString("- /help - display this message\n")
 	sb.WriteString("- /about - get info about this bot and its creators\n\n")
 	sb.WriteString("<strong>Useful links:</strong>\n")

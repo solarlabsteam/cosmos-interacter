@@ -24,6 +24,7 @@ import (
 var (
 	ConfigPath     string
 	NodeAddress    string
+	TendermintRpc  string
 	LogLevel       string
 	MintscanPrefix string
 	NetworkName    string
@@ -211,6 +212,7 @@ func Execute(cmd *cobra.Command, args []string) {
 	bot.Handle("/validator", getValidatorInfo)
 	bot.Handle("/proposals", getProposalsInfo)
 	bot.Handle("/proposal", getProposalInfo)
+	bot.Handle("/wenblock", getBlockApproximateDate)
 	bot.Handle("/rate", getRate)
 	bot.Handle("/help", getHelp)
 	bot.Handle("/start", getHelp)
@@ -235,6 +237,7 @@ func sendMessage(message *tb.Message, text string) {
 
 func main() {
 	rootCmd.PersistentFlags().StringVar(&ConfigPath, "config", "", "Config file path")
+	rootCmd.PersistentFlags().StringVar(&TendermintRpc, "tendermint-rpc", "http://localhost:26657", "Tendermint RPC address")
 	rootCmd.PersistentFlags().StringVar(&Denom, "denom", "", "Cosmos coin denom")
 	rootCmd.PersistentFlags().Float64Var(&DenomCoefficient, "denom-coefficient", 0, "Denom coefficient")
 	rootCmd.PersistentFlags().StringVar(&LogLevel, "log-level", "info", "Logging level")
