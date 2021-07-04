@@ -37,7 +37,7 @@ func getBlockApproximateDate(message *tb.Message) {
 		return
 	}
 
-	if latestBlock.Time.Before(time.Now()) {
+	if blockHeightProvided <= latestBlock.Height {
 		log.Debug().Int64("height", latestBlock.Height).Msg("Block is in the past.")
 		if block, err := getBlock(&blockHeightProvided); err != nil {
 			log.Error().Err(err).Msg("getBlockApproximateDate: Could not get latest block")
@@ -46,7 +46,7 @@ func getBlockApproximateDate(message *tb.Message) {
 			var sb strings.Builder
 			sb.WriteString(fmt.Sprintf("<strong>Block #%d</strong>\n", block.Height))
 			sb.WriteString(fmt.Sprintf("<strong>Generation time: </strong><code>%s</code>\n", block.Time.Format(time.RFC822)))
-			sb.WriteString(fmt.Sprintf("<code>%s</code> in the past.\n", time.Now().Sub(block.Time).String()))
+			sb.WriteString(fmt.Sprintf("<code>%s</code> in the past.\n", time.Since(block.Time).String()))
 			sb.WriteString(fmt.Sprintf("<a href=\"https://mintscan.io/%s/blocks/%d\">Mintscan</a>\n\n", MintscanPrefix, blockHeightProvided))
 
 			sendMessage(message, sb.String())
