@@ -11,15 +11,15 @@ import (
 )
 
 type AscendexResponse struct {
-	data []AscendexBarhist
+	Data []AscendexBarhist `json:"data"`
 }
 
 type AscendexBarhist struct {
-	data AscendexBarhistData
+	Data AscendexBarhistData `json:"data"`
 }
 
 type AscendexBarhistData struct {
-	c string
+	Close string `json:"c"`
 }
 
 func getAscendexRate() (float64, error) {
@@ -53,9 +53,9 @@ func getAscendexRate() (float64, error) {
 		return 0, err
 	}
 
-	if len(response.data) == 0 {
+	if len(response.Data) == 0 {
 		return 0, fmt.Errorf("empty response from Ascendex")
 	}
 
-	return strconv.ParseFloat(response.data[0].data.c, 64)
+	return strconv.ParseFloat(response.Data[0].Data.Close, 64)
 }
