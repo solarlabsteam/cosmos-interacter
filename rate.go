@@ -16,7 +16,6 @@ func getRate(message *tb.Message) {
 		var cg = gecko.NewClient(nil)
 		if result, err := cg.SimpleSinglePrice(CoingeckoCurrency, "usd"); err != nil {
 			log.Error().Err(err).Str("currency", CoingeckoCurrency).Msg("Could not get Coingecko currency rate")
-			return
 		} else {
 			sb.WriteString(fmt.Sprintf("<code>$%.3f</code> ", result.MarketPrice))
 			sb.WriteString(fmt.Sprintf("<a href=\"https://www.coingecko.com/en/coins/%s\">Coingecko</a>\n", CoingeckoCurrency))
@@ -26,7 +25,6 @@ func getRate(message *tb.Message) {
 	if AscendexCurrency != "" {
 		if result, err := getAscendexRate(); err != nil {
 			log.Error().Err(err).Str("currency", AscendexCurrency).Msg("Could not get Ascendex currency rate")
-			return
 		} else {
 			sb.WriteString(fmt.Sprintf("<code>$%.3f</code> ", result))
 			sb.WriteString(fmt.Sprintf(
