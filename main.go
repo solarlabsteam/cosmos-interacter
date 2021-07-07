@@ -44,6 +44,7 @@ var (
 	DenomCoefficient float64
 
 	CoingeckoCurrency string
+	AscendexCurrency  string
 
 	grpcConn *grpc.ClientConn
 
@@ -244,6 +245,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&NodeAddress, "node", "localhost:9090", "RPC node address")
 	rootCmd.PersistentFlags().StringVar(&MintscanPrefix, "mintscan-prefix", "persistence", "Prefix for mintscan links like https://mintscan.io/{prefix}")
 	rootCmd.PersistentFlags().StringVar(&CoingeckoCurrency, "coingecko-currency", "persistence", "Coingecko currency")
+	rootCmd.PersistentFlags().StringVar(&AscendexCurrency, "ascendex-currency", "xprt", "Ascendex currency")
 	rootCmd.PersistentFlags().StringVar(&NetworkName, "network-name", "Persistence", "Network name for help")
 
 	rootCmd.PersistentFlags().StringVar(&TelegramToken, "telegram-token", "", "Telegram bot token")
