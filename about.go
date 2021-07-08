@@ -20,6 +20,7 @@ func getAbout(message *tb.Message) {
 	sb.WriteString("If you like what we're doing, consider staking with us!\n")
 	sb.WriteString("- <a href=\"https://www.mintscan.io/sentinel/validators/sentvaloper1sazxkmhym0zcg9tmzvc4qxesqegs3q4u66tpmf\">Sentinel</a>\n")
 	sb.WriteString("- <a href=\"https://www.mintscan.io/persistence/validators/persistencevaloper1kp2sype5n0ky3f8u50pe0jlfcgwva9y79qlpgy\">Persistence</a>\n")
+	sb.WriteString("- <a href=\"https://www.mintscan.io/osmosis/validators/osmovaloper16jn3383fn4v4vuuvgclr3q7rumeglw8kdq6e48\">Osmosis</a>\n")
 
 	sendMessage(message, sb.String())
 	log.Info().
