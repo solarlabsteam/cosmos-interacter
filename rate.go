@@ -34,6 +34,18 @@ func getRate(message *tb.Message) {
 		}
 	}
 
+	if MxcCurrency != "" {
+		if result, err := getMxcRate(); err != nil {
+			log.Error().Err(err).Str("currency", MxcCurrency).Msg("Could not get MXC currency rate")
+		} else {
+			sb.WriteString(fmt.Sprintf("<code>$%.3f</code> ", result))
+			sb.WriteString(fmt.Sprintf(
+				"<a href=\"https://www.mexc.com/exchange/%s_USDT\">MXC</a>\n",
+				strings.ToUpper(MxcCurrency),
+			))
+		}
+	}
+
 	if text := sb.String(); text == "" {
 		sendMessage(message, "Could not get currency rate")
 		log.Error().
