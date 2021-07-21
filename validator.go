@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	tb "gopkg.in/tucnak/telebot.v2"
@@ -117,7 +118,9 @@ func getValidator(address string) (stakingtypes.Validator, error) {
 	stakingClient := stakingtypes.NewQueryClient(grpcConn)
 	validatorsResponse, err := stakingClient.Validators(
 		context.Background(),
-		&stakingtypes.QueryValidatorsRequest{},
+		&stakingtypes.QueryValidatorsRequest{
+			Pagination: &querytypes.PageRequest{Limit: PaginationLimit},
+		},
 	)
 
 	if err != nil {
