@@ -148,7 +148,9 @@ func getValidatorRank(validator stakingtypes.Validator) (int, error) {
 	stakingClient := stakingtypes.NewQueryClient(grpcConn)
 	validatorsResponse, err := stakingClient.Validators(
 		context.Background(),
-		&stakingtypes.QueryValidatorsRequest{},
+		&stakingtypes.QueryValidatorsRequest{
+			Pagination: &querytypes.PageRequest{Limit: PaginationLimit},
+		},
 	)
 
 	if err != nil {
